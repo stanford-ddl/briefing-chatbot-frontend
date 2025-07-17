@@ -1,0 +1,23 @@
+{
+  "name": "llamaindex-server-ui",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "nodemon --exec tsx index.ts"
+  },
+  "dependencies": {
+    "@llamaindex/server": "0.2.10",
+    "dotenv": "^16.4.7",
+    "lucide-react": "^0.460.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.3",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "nodemon": "^3.1.10",
+    "tsx": "4.7.2",
+    "typescript": "^5.3.2"
+  }
+}

@@ -1,0 +1,4 @@
+pnpm format
+pnpm lint
+uvx ruff check .
+uvx ruff format . --check 

@@ -1,0 +1,25 @@
+# Python files
+**/__pycache__
+**/build
+**/dist
+**/venv
+**/env
+**/llama-index-server.egg-info
+llama_index/server/resources/ui
+
+# Jupyter files
+**/*.ipynb
+
+# Pytest files
+**/pytest.ini
+**/pytest.ini
+
+# Pytest cache
+**/pytest_cache
+
+# Tools
+**/.ruff_cache
+**/.mypy_cache
+**/.pylint.d
+**/.pyrightconfig.json
+**/.ui
