@@ -1,3 +1,5 @@
+import { apiClient } from './api-client';
+
 // Access codes mapping - in production, this would be in a database
 // One access code per deliberation event - all participants share the same code
 export const ACCESS_CODES = {
@@ -32,7 +34,8 @@ export const DOCUMENTS = {
   }
 };
 
-export function validateAccessCode(code: string) {
+export async function validateAccessCode(code: string) {
+  // First check if the code exists in our mapping
   const accessData = ACCESS_CODES[code as keyof typeof ACCESS_CODES];
   if (!accessData) {
     return { valid: false, error: 'Invalid access code' };
@@ -42,6 +45,9 @@ export function validateAccessCode(code: string) {
   if (!document) {
     return { valid: false, error: 'Document not found' };
   }
+
+  // Skip backend authentication for development - just validate the access code locally
+  console.log('Access code validated locally:', code);
   
   return {
     valid: true,

@@ -26,7 +26,7 @@ export default function Home() {
     setIsLoading(true);
 
     try {
-      const result = validateAccessCode(accessCode.trim().toUpperCase());
+      const result = await validateAccessCode(accessCode.trim().toUpperCase());
       
       if (!result.valid) {
         setError(result.error || 'Invalid access code');

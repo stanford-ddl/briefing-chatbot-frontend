@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { apiClient } from '@/lib/api-client'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -55,31 +56,21 @@ export function ChatSection() {
     setInput('')
     setIsLoading(true)
 
-    // Simulate AI response
-    const documentFocusedResponses = [
-      "Based on the specific content in your assigned document, here's what I found...",
-      "Looking at the evidence presented in this briefing document...",
-      "According to the proposals outlined in your document...", 
-      "The document specifically mentions this in section... let me break it down for you...",
-      "This is an important point covered in your briefing. The document suggests...",
-      "I can only discuss what's contained in your assigned document, and on this topic it states...",
-    ]
-
-    const mockContent = documentFocusedResponses[Math.floor(Math.random() * documentFocusedResponses.length)] + 
-      " [This would be replaced with actual document-based AI responses in the real implementation]"
-
-    // Add assistant message with streaming effect
-    const assistantMessage: Message = { role: 'assistant', content: '' }
-    setMessages(prev => [...prev, assistantMessage])
-
-    const words = mockContent.split(' ')
-    for (let i = 0; i < words.length; i++) {
-      await new Promise(resolve => setTimeout(resolve, 50))
-      const streamedContent = words.slice(0, i + 1).join(' ')
-      setMessages(prev => [
-        ...prev.slice(0, -1),
-        { role: 'assistant', content: streamedContent }
-      ])
+    try {
+      // Use real API call
+      const response = await apiClient.sendMessage(text)
+      
+      // Add assistant message
+      const assistantMessage: Message = { role: 'assistant', content: response }
+      setMessages(prev => [...prev, assistantMessage])
+    } catch (error) {
+      console.error('Chat error:', error)
+      // Fallback to error message
+      const errorMessage: Message = { 
+        role: 'assistant', 
+        content: 'Sorry, I encountered an error. Please try again or check if you need to log in again.' 
+      }
+      setMessages(prev => [...prev, errorMessage])
     }
 
     setIsLoading(false)

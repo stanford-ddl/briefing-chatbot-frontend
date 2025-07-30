@@ -26,18 +26,22 @@ export default function SessionPage() {
   const [showPdf, setShowPdf] = useState(true)
 
   useEffect(() => {
-    if (accessCode && typeof accessCode === 'string') {
-      const result = validateAccessCode(accessCode)
-      
-      if (!result.valid) {
-        setError(result.error || 'Invalid access code')
+    const checkAccess = async () => {
+      if (accessCode && typeof accessCode === 'string') {
+        const result = await validateAccessCode(accessCode)
+        
+        if (!result.valid) {
+          setError(result.error || 'Invalid access code')
+          setIsLoading(false)
+          return
+        }
+        
+        setSessionData(result)
         setIsLoading(false)
-        return
       }
-      
-      setSessionData(result)
-      setIsLoading(false)
     }
+
+    checkAccess()
   }, [accessCode])
 
   if (isLoading) {
