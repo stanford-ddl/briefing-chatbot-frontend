@@ -130,7 +130,7 @@ export default function SessionPage() {
                   </div>
                   <div className="flex-1 min-h-0 overflow-hidden">
                     <iframe
-                      src="/documents/new-school-briefing-materials.pdf"
+                      src="/documents/EN-2024-FINAL-GenAI-Community-Forum-Info-Pack.pdf"
                       className="w-full h-full border-0 rounded-md"
                       title="Briefing Materials"
                     />
