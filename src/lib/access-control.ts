@@ -4,18 +4,18 @@ import { apiClient } from './api-client';
 // One access code per deliberation event - all participants share the same code
 export const ACCESS_CODES = {
   // DDL Deliberation - All participants use this code
-  'DDL': {
-    documentId: 'new-school-briefing',
-    deliberationTitle: 'New School Policy Deliberation',
+  '12345678': {
+    documentId: '2025 GenAI Community Forum',
+    deliberationTitle: '2025 GenAI Community Forum',
     eventDate: '2024-02-15'
   }
 };
 
 export const DOCUMENTS = {
-  'new-school-briefing': {
+  '2025-genai-community-forum': {
     title: 'New School Policy Deliberation',
     description: 'Participants will deliberate on proposals to improve school choice, admissions, and governance in NYC public high schools. This briefing offers background, perspectives, and trade-offs to guide the conversation.',
-    fileName: 'new-school-briefing-materials.pdf'
+    fileName: 'EN-2024-FINAL-GenAI-Community-Forum-Info-Pack.pdf'
   },
   'climate-policy': {
     title: 'Climate Policy Framework 2024',
