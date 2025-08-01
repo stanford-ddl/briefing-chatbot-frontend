@@ -88,22 +88,24 @@ export default function SessionPage() {
 
       <div className={`${sourceSans.variable} ${sourceSerif.variable} h-screen bg-gray-50 flex flex-col font-sans overflow-hidden`}>
         <div className="flex-1 flex min-h-0">
-          <div className="max-w-7xl mx-auto p-6 flex-1 flex gap-6 min-h-0">
+          <div className="max-w-7xl mx-auto p-3 md:p-6 flex-1 flex flex-col md:flex-row gap-3 md:gap-6 min-h-0">
             {/* Left Side - Chat */}
-            <div className={`${showPdf ? 'w-1/2' : 'w-full'} min-h-0 overflow-hidden transition-all duration-300`}>
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 border-l-4 border-l-[#a70532] p-6 flex flex-col h-full">
+            <div className={`w-full ${showPdf ? 'md:w-1/2' : 'md:w-full'} min-h-0 overflow-hidden transition-all duration-300`}>
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 border-l-4 border-l-[#a70532] p-4 md:p-6 flex flex-col h-full">
                 <div className="flex items-center justify-between mb-4 flex-shrink-0">
-                  <h2 className="text-xl font-semibold">
+                  <h2 className="text-lg md:text-xl font-semibold">
                     Your Deliberation Guide
                   </h2>
-                  {!showPdf && (
-                    <button
-                      onClick={() => setShowPdf(true)}
-                      className="inline-flex items-center px-3 py-1.5 text-xs bg-gray-100 text-gray-700 rounded-full hover:bg-red-100 hover:text-red-700 transition-colors border border-gray-200 hover:border-red-300"
-                    >
-                      Open Document
-                    </button>
-                  )}
+                  <div className="flex items-center h-[30px]">
+                    {!showPdf && (
+                      <button
+                        onClick={() => setShowPdf(true)}
+                        className="hidden md:inline-flex items-center px-3 py-1.5 text-xs bg-gray-100 text-gray-700 rounded-full hover:bg-red-100 hover:text-red-700 transition-colors border border-gray-200 hover:border-red-300"
+                      >
+                        Open Document
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <div className="flex-1 min-h-0 overflow-hidden">
                   <div className="h-full">
@@ -113,14 +115,14 @@ export default function SessionPage() {
               </div>
             </div>
 
-            {/* Right Side - PDF Viewer */}
-            {showPdf && (
-              <div className="w-1/2 min-h-0 overflow-hidden">
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 border-l-4 border-l-[#a70532] p-6 flex flex-col h-full">
-                  <div className="flex items-center justify-between mb-4 flex-shrink-0">
-                    <h2 className="text-xl font-semibold">
-                      Your Briefing Material
-                    </h2>
+            {/* Right Side - PDF Viewer - Hidden on mobile */}
+            <div className={`hidden md:block ${showPdf ? 'md:w-1/2' : 'md:w-0'} min-h-0 overflow-hidden transition-all duration-300`}>
+              <div className={`${showPdf ? 'opacity-100' : 'opacity-0 pointer-events-none'} bg-white rounded-lg shadow-sm border border-gray-200 border-l-4 border-l-[#a70532] p-6 flex flex-col h-full transition-opacity duration-300`}>
+                <div className="flex items-center justify-between mb-4 flex-shrink-0">
+                  <h2 className="text-xl font-semibold">
+                    Your Briefing Material
+                  </h2>
+                  <div className="flex items-center h-[30px]">
                     <button
                       onClick={() => setShowPdf(false)}
                       className="inline-flex items-center px-3 py-1.5 text-xs bg-gray-100 text-gray-700 rounded-full hover:bg-red-100 hover:text-red-700 transition-colors border border-gray-200 hover:border-red-300"
@@ -128,16 +130,16 @@ export default function SessionPage() {
                       Close
                     </button>
                   </div>
-                  <div className="flex-1 min-h-0 overflow-hidden">
-                    <iframe
-                      src="/documents/EN-2024-FINAL-GenAI-Community-Forum-Info-Pack.pdf"
-                      className="w-full h-full border-0 rounded-md"
-                      title="Briefing Materials"
-                    />
-                  </div>
+                </div>
+                <div className="flex-1 min-h-0 overflow-hidden">
+                  <iframe
+                    src="/documents/EN-2024-FINAL-GenAI-Community-Forum-Info-Pack.pdf"
+                    className="w-full h-full border-0 rounded-md"
+                    title="Briefing Materials"
+                  />
                 </div>
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>

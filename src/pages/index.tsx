@@ -46,7 +46,7 @@ export default function Home() {
     <div
       className={`${sourceSans.variable} ${sourceSerif.variable} font-sans min-h-screen bg-gray-50 flex items-center justify-center`}
     >
-      <div className="max-w-md w-full mx-auto p-6">
+      <div className="max-w-md w-full mx-auto p-4 md:p-6">
         {/* Header */}
         <div className="text-center mb-8">
           {/* Lab Logo */}
@@ -75,7 +75,7 @@ export default function Home() {
         </div>
 
         {/* Access Code Form */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <input
@@ -84,7 +84,7 @@ export default function Home() {
                 value={accessCode}
                 onChange={(e) => setAccessCode(e.target.value)}
                 placeholder="Enter your access code"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:border-[#a70532] focus:shadow-[0_0_0_2px_rgba(167,5,50,0.1)] text-center font-mono text-lg tracking-wider transition-all duration-200"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:border-[#a70532] focus:shadow-[0_0_0_2px_rgba(167,5,50,0.1)] text-center font-sans text-lg tracking-wider transition-all duration-200"
                 disabled={isLoading}
                 autoFocus
                 required

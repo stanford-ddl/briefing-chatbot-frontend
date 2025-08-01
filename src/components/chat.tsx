@@ -9,11 +9,11 @@ interface Message {
 const getInitialMessages = (): Message[] => [
   {
     role: 'assistant',
-    content: `👋  Welcome! I'm here to help you explore the New School Policy Deliberation briefing.
+    content: `👋  Welcome! I'm here to help you explore your briefing material.
 
-🔒  I can only answer questions based on this document — not from outside sources.
+🔒  I can only answer questions based on your briefing material document.
 
-🎯 I can help you understand key sections, explain complex ideas, and highlight important points for discussion.
+🎯 I can help you understand key sections, explain ideas, and highlight important points for discussion.
 
 💬  What would you like to explore?`,
   },
@@ -27,7 +27,7 @@ const SUGGESTED_PROMPTS = [
 ];
 
 export function ChatSection() {
-  const [messages, setMessages] = useState<Message[]>(getInitialMessages())
+  const [messages, setMessages] = useState<Message[]>(() => getInitialMessages())
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -57,12 +57,37 @@ export function ChatSection() {
     setIsLoading(true)
 
     try {
-      // Use real API call
-      const response = await apiClient.sendMessage(text)
-      
-      // Add assistant message
-      const assistantMessage: Message = { role: 'assistant', content: response }
-      setMessages(prev => [...prev, assistantMessage])
+      // Check if we should use mock responses (for development without backend)
+      const useMockResponses = process.env.NODE_ENV === 'development' && 
+                              process.env.NEXT_PUBLIC_SKIP_BACKEND_AUTH === 'true';
+
+      if (useMockResponses) {
+        // Simulate a delay
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        
+        // Mock response based on the user's question
+        let mockResponse = `Thanks for your question: "${text}". `
+        
+        if (text.toLowerCase().includes('summary')) {
+          mockResponse += "This document provides a comprehensive overview of the 2025 GenAI Community Forum, focusing on proposals to improve school choice, admissions, and governance in NYC public high schools. The briefing includes background information, various perspectives, and important trade-offs that participants should consider during deliberation."
+        } else if (text.toLowerCase().includes('important')) {
+          mockResponse += "This issue is important because it directly affects how students access and succeed in NYC's public high school system. The decisions made here will impact thousands of students and families, particularly regarding equity, accessibility, and educational outcomes."
+        } else if (text.toLowerCase().includes('focus') || text.toLowerCase().includes('discussion')) {
+          mockResponse += "Before the group discussion, you should focus on understanding the key stakeholder perspectives, the proposed policy changes, and the potential trade-offs between different approaches. Pay attention to how different solutions might affect various communities differently."
+        } else {
+          mockResponse += "I'm designed to help you understand the briefing document for the GenAI Community Forum. I can explain key sections, highlight important discussion points, and help you prepare for deliberation. What specific aspect would you like to explore?"
+        }
+        
+        const assistantMessage: Message = { role: 'assistant', content: mockResponse }
+        setMessages(prev => [...prev, assistantMessage])
+      } else {
+        // Use real API call when backend is available
+        const response = await apiClient.sendMessage(text)
+        
+        // Add assistant message
+        const assistantMessage: Message = { role: 'assistant', content: response }
+        setMessages(prev => [...prev, assistantMessage])
+      }
     } catch (error) {
       console.error('Chat error:', error)
       // Fallback to error message

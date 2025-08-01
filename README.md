@@ -1,89 +1,57 @@
 # DDL Chatbot Frontend
 
-Modern chatbot interface built with Next.js 15 and TypeScript.
+AI-powered briefing material chat interface for deliberative democracy sessions.
 
-## Quick Deploy
+## 🚀 Quick Deploy to Vercel
 
-### Deploy to Vercel
-1. Go to vercel.com and sign in with GitHub
-2. Import your repository
-3. Set environment variables:
-   - `NEXT_PUBLIC_API_URL` - Your backend API URL
-4. Deploy
+1. **Connect Repository**: Import this GitHub repo to Vercel
+2. **Set Environment Variables**:
+   ```
+   NEXT_PUBLIC_API_URL=https://your-backend.run.app
+   NEXT_PUBLIC_SKIP_BACKEND_AUTH=false
+   ```
+3. **Deploy**: Automatic deployment on git push
 
-### Local Development
+## 💻 Local Development
+
 ```bash
 # Install dependencies
 npm install
 
-# Set environment variables
+# Copy environment template
 cp .env.example .env.local
-# Edit .env.local with your backend URL
 
-# Run development server
-npm run dev
-```
-
-## Environment Variables
-
-- `NEXT_PUBLIC_API_URL` - Backend API URL (e.g., `https://your-backend.run.app`)
-
-## Features
-
-- Modern UI with clean, responsive design
-- Real-time chat interface
-- Authentication with access code system
-- TypeScript for type safety
-- Mobile friendly
-
-## Tech Stack
-
-- Framework: Next.js 15
-- Language: TypeScript
-- Styling: CSS Modules
-- Deployment: Vercel-optimized
-
-## Usage
-
-1. Enter access code: `DDL`
-2. Start chatting with the AI
-3. Ask questions about briefing documents
-4. Get intelligent, context-aware responses
-
-## Development
-
-```bash
-# Install dependencies
-npm install
+# Edit .env.local with your settings
+# For development without backend:
+NEXT_PUBLIC_SKIP_BACKEND_AUTH=true
 
 # Start development server
 npm run dev
-
-# Build for production
-npm run build
-
-# Start production server
-npm start
 ```
 
-Visit `http://localhost:3000` to see your application.
+## 📱 Features
 
-## Deployment
+- **Responsive Design**: Works on mobile and desktop
+- **Access Code Authentication**: Secure session management  
+- **Real-time Chat**: Interactive AI conversation
+- **PDF Viewer**: Side-by-side document viewing (desktop only)
+- **Mock Mode**: Development without backend
 
-The frontend can be deployed to:
-- **Vercel** (recommended for Next.js)
-- **Netlify**
-- **Docker** (static export)
+## 🔑 Access
 
-### Vercel Deployment
+- **Access Code**: `12345678`
+- **Usage**: Enter code → Chat with AI about briefing materials
 
-1. Connect your GitHub repository to Vercel
-2. Set environment variable: `NEXT_PUBLIC_API_URL=https://your-backend-domain.com`
-3. Deploy automatically on commits
+## 🛠 Tech Stack
 
-## Project Structure
+- Next.js 15 + TypeScript
+- Tailwind CSS
+- Google Fonts (Source Sans 3)
+- Mobile-first responsive design
 
-- `src/pages/` - Next.js pages (routing)
-- `src/components/` - React components
-- `src/lib/` - Utilities and API client
-- `public/` - Static assets and documents
+## 📝 Environment Variables
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `NEXT_PUBLIC_API_URL` | Backend API endpoint | `https://api.example.com` |
+| `NEXT_PUBLIC_SKIP_BACKEND_AUTH` | Skip backend (dev only) | `true` or `false` |
