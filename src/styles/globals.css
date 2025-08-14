@@ -135,3 +135,11 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+/* iOS/iPadOS 上讓字不要變薄：關掉光學尺寸與合成粗體 */
+@supports (-webkit-touch-callout: none) {
+  .ios-solid-text {
+    font-optical-sizing: none;
+    font-synthesis-weight: none;
+  }
+}
