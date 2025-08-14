@@ -12,15 +12,43 @@ import { validateAccessCode } from '@/lib/access-control'
 
 // import { useRef } from 'react'
 
+// const sourceSans = Source_Sans_3({
+//   variable: "--font-source-sans",
+//   subsets: ["latin"],
+// })
+
 const sourceSans = Source_Sans_3({
   variable: "--font-source-sans",
   subsets: ["latin"],
+  weight: ["400", "600", "700", "800"],   // 👈 關鍵：不要用可變字重
+  display: "swap",
 })
+
+// const sourceSerif = Source_Serif_4({
+//   variable: "--font-source-serif",
+//   subsets: ["latin"],
+// })
 
 const sourceSerif = Source_Serif_4({
   variable: "--font-source-serif",
   subsets: ["latin"],
+  weight: ["400", "600", "700"],
+  display: "swap",
 })
+
+// --- PDF.js viewer 全域物件型別宣告 ---
+type PDFViewerApp = {
+  page: number;
+  initializedPromise?: Promise<void>;
+  eventBus?: { dispatch: (type: string, detail?: any) => void };
+};
+
+declare global {
+  interface Window {
+    PDFViewerApplication?: PDFViewerApp;
+  }
+}
+
 
 export default function SessionPage() {
   const router = useRouter()
@@ -47,27 +75,45 @@ export default function SessionPage() {
   //   }
   // }
 
-  const jumpToPage = (page: number) => {
+  const jumpToPage = (page: number, snippet?: string) => {
     setShowPdf(true);
     const p = Math.max(1, Math.floor(page || 1));
     const iframe = iframeRef.current;
     if (!iframe) return;
 
-    const win = iframe.contentWindow as any;
-    if (pdfjsReadyRef.current && win?.PDFViewerApplication) {
-      // ✅ 最佳：直接指派頁碼，不重載
-      win.PDFViewerApplication.page = p;
-    } else {
-      // 尚未 ready 的第一次：用 hash 導航（pdf.js 會吃）
-      const base = `/pdfjs/web/viewer.html?file=${encodeURIComponent(PDF_SRC_BASE)}`;
-      iframe.src = `${base}#page=${p}`;
+    const base = `/pdfjs/web/viewer.html?file=${encodeURIComponent(PDF_SRC_BASE)}`;
+    const win = iframe.contentWindow as Window | null;
+
+    // 把要搜尋的文字先存起來（就緒後再做）
+    if (snippet && snippet.trim()) {
+      pendingQueryRef.current = snippet;
     }
+
+    const app = win?.PDFViewerApplication;
+
+    if (pdfjsReadyRef.current && app) {
+      // ✅ viewer 已就緒：直接跳頁並高亮
+      app.page = p;
+      if (pendingQueryRef.current) {
+        highlightOnce(win!, pendingQueryRef.current);
+        pendingQueryRef.current = null;
+      }
+    } else {
+      // ⏳ viewer 未就緒：記住頁碼，並強制 reload（禁 history）
+      pendingPageRef.current = p;
+      iframe.src = `${base}&v=${Date.now()}#disableHistory=true&page=${p}`;
+
+    }
+
   };
 
   const pdfjsReadyRef = useRef(false);
+  const pendingPageRef = useRef<number | null>(null);
+  const pendingQueryRef = useRef<string | null>(null);
+  const clearTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    if (!router.isReady) return;                 // 等 URL 參數準備好
+    if (!router.isReady) return;                           // 等 URL 參數準備好
     const code = typeof accessCode === 'string' ? accessCode : '';
 
     if (!code) {
@@ -82,23 +128,65 @@ export default function SessionPage() {
         setIsLoading(true);
         setError('');
 
-        // 1) 驗證存取碼（請確認 validateAccessCode 回傳型別）
+        // 1) 呼叫你的驗證 API（請確認會回傳 { document, deliberationTitle, ... }）
         const data = await validateAccessCode(code);
         if (!data) throw new Error('Invalid access code');
 
-        // 2) 寫入你頁面渲染需要的資料
-        if (!cancelled) {
-          setSessionData(data);                  // { document, deliberationTitle, ... }
-        }
-      } catch (e: any) {
-        if (!cancelled) setError(e?.message || 'Access validation failed.');
+        // 2) 寫進狀態，供下方 UI 使用
+        if (!cancelled) setSessionData(data);
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : 'Access validation failed.';
+        if (!cancelled) setError(msg);
       } finally {
-        if (!cancelled) setIsLoading(false);     // ← 確保關閉 loading
+        if (!cancelled) setIsLoading(false);              // ★ 關鍵：關掉 loading
       }
     })();
 
     return () => { cancelled = true; };
   }, [router.isReady, accessCode]);
+
+
+  // --- 小工具：發出一次高亮並在 3 秒後清除 ---
+  function highlightOnce(win: Window, raw: string) {
+    if (clearTimerRef.current) {
+      clearTimeout(clearTimerRef.current);
+      clearTimerRef.current = null;
+    }
+
+    const q = (raw || '')
+      .replace(/\s+/g, ' ')
+      .replace(/[\[\]]/g, '')
+      .trim()
+      .slice(0, 120);
+
+    const app = win.PDFViewerApplication;
+    const eventBus = app?.eventBus;
+    if (!eventBus || !q) return;
+
+    eventBus.dispatch('find', {
+      source: null,
+      type: 'find',
+      query: q,
+      phraseSearch: true,
+      caseSensitive: false,
+      entireWord: false,
+      highlightAll: true,
+      findPrevious: false,
+    });
+
+    clearTimerRef.current = setTimeout(() => {
+      eventBus.dispatch('find', {
+        source: null,
+        type: 'find',
+        query: '',
+        phraseSearch: true,
+        caseSensitive: false,
+        entireWord: false,
+        highlightAll: false,
+        findPrevious: false,
+      });
+    }, 3000);
+  }
 
 
   if (isLoading) {
@@ -150,7 +238,7 @@ export default function SessionPage() {
             <div className={`w-full ${showPdf ? 'md:w-1/2' : 'md:w-full'} min-h-0 overflow-hidden transition-all duration-300`}>
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 border-l-4 border-l-[#a70532] p-4 md:p-6 flex flex-col h-full">
                 <div className="flex items-center justify-between mb-4 flex-shrink-0">
-                  <h2 className="text-lg md:text-xl font-semibold">
+                  <h2 className="text-lg md:text-xl font-bold tracking-tight text-gray-900 !opacity-100">
                     Your Deliberation Guide
                   </h2>
                   <div className="flex items-center h-[30px]">
@@ -176,7 +264,7 @@ export default function SessionPage() {
             <div className={`hidden md:block ${showPdf ? 'md:w-1/2' : 'md:w-0'} min-h-0 overflow-hidden transition-all duration-300`}>
               <div className={`${showPdf ? 'opacity-100' : 'opacity-0 pointer-events-none'} bg-white rounded-lg shadow-sm border border-gray-200 border-l-4 border-l-[#a70532] p-6 flex flex-col h-full transition-opacity duration-300`}>
                 <div className="flex items-center justify-between mb-4 flex-shrink-0">
-                  <h2 className="text-xl font-semibold">
+                  <h2 className="text-xl font-bold tracking-tight text-gray-900 !opacity-100">
                     Your Briefing Material
                   </h2>
                   <div className="flex items-center h-[30px]">
