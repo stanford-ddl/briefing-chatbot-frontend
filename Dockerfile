@@ -1,44 +1,44 @@
-# Production Docker build for Next.js frontend
-FROM node:20-alpine AS base
-
-# Dependencies stage
-FROM base AS deps
+# 依需求可改 Node 版本
+FROM node:20-alpine AS deps
 WORKDIR /app
-
-# Copy package files and scripts needed for install
-COPY package.json package-lock.json* ./
+RUN apk add --no-cache libc6-compat
+COPY package*.json ./
 COPY scripts ./scripts
-RUN npm install --frozen-lockfile
+RUN npm ci
 
-# Build stage
-FROM base AS builder
+FROM node:20-alpine AS builder
 WORKDIR /app
+RUN apk add --no-cache libc6-compat
+
+# 先帶入會被前端使用的公有環境變數（build-time 嵌入）
+ENV NEXT_PUBLIC_SKIP_BACKEND_AUTH=false
+ENV NEXT_PUBLIC_API_URL=https://brefing-chatbot-llama-workflows-service-730952302890.us-central1.run.app
+ENV NEXT_TELEMETRY_DISABLED=1
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-
-# Build the application for production
 RUN npm run build
 
-# Runtime stage - minimal production image
-FROM base AS runner
+FROM node:20-alpine AS runner
 WORKDIR /app
+RUN apk add --no-cache libc6-compat
 
 ENV NODE_ENV=production
+# Cloud Run 預設 PORT=8080
+ENV PORT=8080
 
-# Create non-root user for security
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+# （可選）在執行階段也保留一份，利於除錯/追蹤
+ENV NEXT_PUBLIC_SKIP_BACKEND_AUTH=false
+ENV NEXT_PUBLIC_API_URL=https://brefing-chatbot-llama-workflows-service-730952302890.us-central1.run.app
 
-# Copy built application files
+# 非 root 使用者
+RUN addgroup -g 1001 nodejs && adduser -D -G nodejs -u 1001 nodeuser
+
+# 拷貝靜態與 standalone 輸出
 COPY --from=builder /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
 
-USER nextjs
-
-EXPOSE 3000
-
-ENV PORT=3000
-ENV HOSTNAME="0.0.0.0"
-
+USER 1001
+EXPOSE 8080
 CMD ["node", "server.js"]
