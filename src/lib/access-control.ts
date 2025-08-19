@@ -46,11 +46,12 @@ export async function validateAccessCode(code: string) {
     return { valid: false, error: 'Document not found' };
   }
 
-  // Check if we should skip backend authentication (for development or when explicitly configured)
-  const skipBackendAuth = process.env.NEXT_PUBLIC_SKIP_BACKEND_AUTH === 'true';
+  // Check if we should skip backend authentication (for development without backend)
+  const skipBackendAuth = process.env.NODE_ENV === 'development' && 
+                          process.env.NEXT_PUBLIC_SKIP_BACKEND_AUTH === 'true';
 
   if (skipBackendAuth) {
-    console.log('Access code validated locally (backend authentication skipped):', code);
+    console.log('Access code validated locally (development mode):', code);
   } else {
     // 向後端驗證 access code，後端會透過 Set-Cookie 回傳 session cookie
     const authOk = await apiClient.authenticate(code);
