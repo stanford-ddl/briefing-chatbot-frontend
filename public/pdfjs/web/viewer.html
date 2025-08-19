@@ -32,6 +32,123 @@ See https://github.com/adobe-type-tools/cmap-resources
 <script src="../build/pdf.mjs" type="module"></script>
 
     <link rel="stylesheet" href="viewer.css">
+    <link rel="stylesheet" href="../custom-viewer.css">
+
+    <!-- Inline styles to forcefully hide editor tools -->
+    <style>
+      /* Force hide all PDF.js editor tools */
+      #editorModeButtons,
+      #editorModeSeparator,
+      #editorSignature,
+      #editorHighlight,
+      #editorFreeText,
+      #editorInk,
+      #editorStamp,
+      #editorSignatureButton,
+      #editorHighlightButton,
+      #editorFreeTextButton,
+      #editorInkButton,
+      #editorStampButton,
+      .editorParamsToolbar,
+      #editorSignatureParamsToolbar,
+      #editorHighlightParamsToolbar,
+      #editorFreeTextParamsToolbar,
+      #editorInkParamsToolbar,
+      #editorStampParamsToolbar {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+      }
+      
+      /* Hide any toolbar button with editor in the ID */
+      [id*="editor"] {
+        display: none !important;
+        visibility: hidden !important;
+      }
+    </style>
+
+    <!-- Progress tracking script -->
+    <script>
+      // Progress tracking for parent window
+      let lastPage = 1;
+      let lastTotalPages = 1;
+      let sendTimeout = null;
+
+      function sendPageUpdate() {
+        // Clear any pending update
+        if (sendTimeout) {
+          clearTimeout(sendTimeout);
+        }
+
+        // Debounce the update to prevent rapid firing
+        sendTimeout = setTimeout(() => {
+          try {
+            const app = window.PDFViewerApplication;
+            if (app && parent && parent !== window) {
+              const currentPage = app.page || 1;
+              let totalPages = 1;
+              
+              if (app.pagesCount) {
+                totalPages = app.pagesCount;
+              } else if (app.pdfDocument?.numPages) {
+                totalPages = app.pdfDocument.numPages;
+              }
+              
+              // Only send if values actually changed
+              if (currentPage !== lastPage || totalPages !== lastTotalPages) {
+                lastPage = currentPage;
+                lastTotalPages = totalPages;
+                
+                parent.postMessage({
+                  type: 'pageChange',
+                  currentPage: currentPage,
+                  totalPages: totalPages
+                }, '*');
+                
+                console.log('Sent page update:', currentPage, '/', totalPages);
+              }
+            }
+          } catch (error) {
+            console.log('Error sending page update:', error);
+          }
+        }, 100); // 100ms debounce
+      }
+
+      // Listen for messages from parent
+      window.addEventListener('message', function(event) {
+        if (event.data.type === 'getPageInfo') {
+          sendPageUpdate();
+        }
+      });
+
+      // Set up tracking when PDF.js is ready
+      function setupProgressTracking() {
+        const app = window.PDFViewerApplication;
+        if (app && app.eventBus) {
+          // Listen to page changes
+          app.eventBus.on('pagechanging', sendPageUpdate);
+          app.eventBus.on('updateviewarea', sendPageUpdate);
+          
+          // Send initial update
+          setTimeout(sendPageUpdate, 1000);
+          console.log('Progress tracking set up in PDF viewer');
+        } else {
+          // Retry after a delay
+          setTimeout(setupProgressTracking, 1000);
+        }
+      }
+
+      // Start when document is ready
+      document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(setupProgressTracking, 2000);
+      });
+
+      // Also try when window loads
+      window.addEventListener('load', function() {
+        setTimeout(setupProgressTracking, 3000);
+      });
+    </script>
 
   <script src="viewer.mjs" type="module"></script>
   </head>

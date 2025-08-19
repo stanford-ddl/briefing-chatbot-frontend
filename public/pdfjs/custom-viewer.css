@@ -1,0 +1,133 @@
+/* Custom CSS to hide PDF.js editor tools */
+
+/* Hide the entire editor mode buttons container */
+#editorModeButtons {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* Hide the separator after editor mode buttons */
+#editorModeSeparator {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* Hide all individual editor tool containers */
+#editorSignature,
+#editorHighlight,
+#editorFreeText,
+#editorInk,
+#editorStamp {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* Hide all individual editor buttons */
+#editorSignatureButton,
+#editorHighlightButton,
+#editorFreeTextButton,
+#editorInkButton,
+#editorStampButton {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* Hide any editor parameter toolbars */
+.editorParamsToolbar,
+#editorSignatureParamsToolbar,
+#editorHighlightParamsToolbar,
+#editorFreeTextParamsToolbar,
+#editorInkParamsToolbar,
+#editorStampParamsToolbar {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* Hide any toolbar button with editor in the class or ID */
+[id*="editor"],
+[class*="editor"] {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* But keep the editor mode buttons container selector specific */
+body #editorModeButtons,
+html #editorModeButtons {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* Hide PDF.js built-in Table of Contents / Outline / Bookmarks panel */
+#sidebarContainer {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* Hide the sidebar toggle button */
+#sidebarToggle,
+#sidebarToggleButton {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* Hide outline/bookmarks button in toolbar */
+#viewOutline,
+#viewOutlineButton {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* Hide attachments button */
+#viewAttachments,
+#viewAttachmentsButton {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* Hide layers button */
+#viewLayers,
+#viewLayersButton {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* Hide thumbnails button */
+#viewThumbnail,
+#viewThumbnailButton {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* Hide the entire sidebar navigation area */
+.outerContainer #sidebarContainer,
+.outerContainer .sidebar {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* Ensure main container takes full width without sidebar */
+#mainContainer {
+  left: 0 !important;
+  margin-left: 0 !important;
+}
+
+/* Optional: Hide download button if you want to prevent users from downloading */
+/* 
+#downloadButton {
+  display: none !important;
+}
+*/
+
+/* Optional: Hide print button if you want to prevent printing */
+/* 
+#printButton {
+  display: none !important;
+}
+*/
+
+/* Optional: Hide open file button */
+/* 
+#openFileButton {
+  display: none !important;
+}
+*/

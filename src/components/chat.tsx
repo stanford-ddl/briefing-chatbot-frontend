@@ -66,6 +66,7 @@ export function ChatSection({ onJumpToPage }: { onJumpToPage?: (page: number, qu
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  
   // --- ① 放到元件內，就能直接使用 onJumpToPage ---
   const renderWithCitations = (msg: Message): React.ReactNode => {
     const parts: React.ReactNode[] = []
@@ -87,7 +88,7 @@ export function ChatSection({ onJumpToPage }: { onJumpToPage?: (page: number, qu
         <span
           key={`c-${idx}`}
           onClick={() => page && onJumpToPage?.(page, snippet)}
-          className={`inline-flex items-center px-1.5 rounded cursor-pointer ${page ? 'text-[#a70532] hover:underline' : 'text-gray-500'}`}
+          className={`inline-flex items-center px-1.5 rounded cursor-pointer ${page ? 'text-gray-600 hover:bg-red-100 hover:text-red-700' : 'text-gray-500'}`}
           title={page ? `Jump to page ${page}` : 'No page in citation'}
         >
           [{n}]
@@ -236,9 +237,8 @@ export function ChatSection({ onJumpToPage }: { onJumpToPage?: (page: number, qu
                         return (
                           <button
                             key={n}
-
                             onClick={() => p && onJumpToPage?.(p, c?.snippet)}
-                            className="text-xs border border-gray-200 rounded-full px-2 py-0.5 hover:border-[#a70532] hover:text-[#a70532]"
+                            className="text-xs border border-gray-200 rounded-full px-2 py-0.5 hover:bg-red-100 hover:text-red-700 hover:border-red-300 transition-colors text-gray-600"
                             title={p ? `Jump to page ${p}` : 'No page info'}
                           >
                             [{n}] {p ? `p.${p}` : ''}
@@ -255,9 +255,9 @@ export function ChatSection({ onJumpToPage }: { onJumpToPage?: (page: number, qu
             <div className="flex justify-start">
               <div className="bg-white border border-gray-200 text-gray-900 rounded-lg rounded-bl-sm px-4 py-3">
                 <div className="flex space-x-1">
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                  <div className="w-2 h-2 bg-gray-600 rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-gray-600 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                  <div className="w-2 h-2 bg-gray-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                 </div>
               </div>
             </div>
@@ -273,7 +273,7 @@ export function ChatSection({ onJumpToPage }: { onJumpToPage?: (page: number, qu
               <button
                 key={i}
                 onClick={() => handleSuggestedPrompt(prompt)}
-                className="inline-flex items-center px-3 py-1.5 text-xs bg-gray-100 text-gray-700 rounded-full hover:bg-red-100 hover:text-red-700 transition-colors border border-gray-200 hover:border-red-300"
+                className="inline-flex items-center px-3 py-1.5 text-xs bg-gray-100 text-gray-600 rounded-full hover:bg-red-100 hover:text-red-700 transition-colors border border-gray-200 hover:border-red-300"
               >
                 {prompt}
               </button>
@@ -288,7 +288,7 @@ export function ChatSection({ onJumpToPage }: { onJumpToPage?: (page: number, qu
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Type a message..."
+            placeholder="Type your message"
             className="flex-1 px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:border-[#a70532] focus:shadow-[0_0_0_2px_rgba(167,5,50,0.1)] resize-none"
             rows={1}
             disabled={isLoading}

@@ -91,6 +91,13 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-source-sans), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  /* Cross-browser font consistency */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-synthesis: none;
+  /* Ensure body text is dark in light mode */
+  color: #111827;
 }
 
 .dark {
@@ -132,14 +139,218 @@ body {
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background;
+    /* Force dark text in light mode */
+    color: #111827 !important;
   }
 }
 
-/* iOS/iPadOS 上讓字不要變薄：關掉光學尺寸與合成粗體 */
+/* ==========================================================================
+   Cross-Browser Consistency Fixes (Minimal Impact)
+   ========================================================================== */
+
+/* Fix font rendering differences across browsers */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* ==========================================================================
+   Universal Font Consistency
+   ========================================================================== */
+
+/* Force Source Sans 3 across ALL elements */
+*, *::before, *::after {
+  font-family: var(--font-source-sans), ui-sans-serif, system-ui, sans-serif !important;
+}
+
+/* Specific overrides for common elements */
+html, body, div, span, h1, h2, h3, h4, h5, h6, p, a, 
+input, textarea, button, select, option, label,
+.whitespace-pre-wrap {
+  font-family: var(--font-source-sans), ui-sans-serif, system-ui, sans-serif !important;
+}
+
+/* Force consistent font family across all elements */
+* {
+  font-family: var(--font-source-sans), ui-sans-serif, system-ui, sans-serif !important;
+}
+
+body, input, button, textarea, select, h1, h2, h3, h4, h5, h6, p, span, div {
+  font-family: var(--font-source-sans), ui-sans-serif, system-ui, sans-serif !important;
+}
+
+/* iOS/iPadOS font weight consistency */
 @supports (-webkit-touch-callout: none) {
-  .ios-solid-text {
+  * {
     font-optical-sizing: none;
     font-synthesis-weight: none;
+    -webkit-font-smoothing: antialiased;
   }
+}
+
+/* Safari input appearance consistency */
+@supports (-webkit-appearance: none) {
+  input[type="text"],
+  input[type="password"],
+  textarea {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+}
+
+/* Firefox font feature settings */
+@-moz-document url-prefix() {
+  * {
+    -moz-font-feature-settings: "liga" 1;
+    font-feature-settings: "liga" 1;
+  }
+}
+
+/* Prevent font size adjustments on mobile devices */
+html {
+  -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Consistent button styling across browsers */
+button, input[type="submit"], input[type="button"] {
+  font-family: var(--font-source-sans), ui-sans-serif, system-ui, sans-serif !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-synthesis: none;
+}
+
+/* ==========================================================================
+   Consistent Red Color System
+   ========================================================================== */
+
+:root {
+  --red-primary: #a70532;     /* Main red - buttons, borders, focus states */
+  --red-primary-dark: #8b0429; /* Darker red - hover states for primary buttons */
+  --red-light: #fef2f2;       /* Light red background - hover states for secondary buttons */
+  --red-light-text: #dc2626;  /* Light red text - hover text for secondary buttons */
+}
+
+/* ==========================================================================
+   2-Color System Implementation
+   ========================================================================== */
+
+/* 
+   COLOR SYSTEM:
+   - Gray (#6b7280): Static text, labels, button text, placeholders
+   - Black (#111827): User input, chat messages, headers, typed content
+   - Red System: Primary (#a70532), Primary Dark (#8b0429), Light (#fef2f2), Light Text (#dc2626)
+*/
+
+/* GRAY: Static text, labels, descriptions, button text */
+.text-gray-600,
+.text-gray-700 {
+  color: #6b7280 !important;
+}
+
+/* BLACK: User input, chat messages, headers, dynamic content */
+input, 
+textarea,
+h1, h2, h3, h4, h5, h6,
+.text-gray-900,
+[class*="text-gray-900"] {
+  color: #111827 !important;
+}
+
+/* Force black text in chat messages and user content */
+.whitespace-pre-wrap {
+  color: #111827 !important;
+}
+
+/* Placeholder text should be gray */
+input::placeholder,
+textarea::placeholder {
+  color: #6b7280 !important;
+  opacity: 1 !important;
+}
+
+/* Button text should be gray (except when it's white on colored backgrounds) */
+button:not([class*="bg-"]) {
+  color: #6b7280 !important;
+}
+
+/* Specific overrides for consistent gray text on buttons */
+.bg-gray-100 {
+  color: #6b7280 !important;
+}
+
+/* Chat messages - ensure they're black */
+.space-y-4 .text-gray-900 {
+  color: #111827 !important;
+}
+
+/* Loading and error text should be gray */
+.text-red-600,
+.text-red-700 {
+  color: #ef4444 !important; /* Keep error colors as red */
+}
+
+/* ==========================================================================
+   Red Color Consistency Overrides
+   ========================================================================== */
+
+/* Primary buttons - use consistent red */
+.bg-\[\#a70532\] {
+  background-color: var(--red-primary) !important;
+}
+
+.hover\:bg-\[\#8b0429\]:hover {
+  background-color: var(--red-primary-dark) !important;
+}
+
+/* Border colors */
+.border-l-\[\#a70532\] {
+  border-left-color: var(--red-primary) !important;
+}
+
+/* Focus states */
+.focus\:border-\[\#a70532\]:focus {
+  border-color: var(--red-primary) !important;
+}
+
+.focus\:ring-\[\#a70532\]:focus {
+  --tw-ring-color: var(--red-primary) !important;
+}
+
+/* Hover states for secondary buttons */
+.hover\:bg-red-100:hover {
+  background-color: var(--red-light) !important;
+}
+
+.hover\:text-red-700:hover {
+  color: var(--red-light-text) !important;
+}
+
+.hover\:border-red-300:hover {
+  border-color: #fca5a5 !important;
+}
+
+/* Ensure consistent font weights */
+.font-bold {
+  font-weight: 700 !important;
+}
+
+.font-semibold {
+  font-weight: 600 !important;
+}
+
+.font-medium {
+  font-weight: 500 !important;
+}
+
+.font-normal {
+  font-weight: 400 !important;
+}
+
+/* Ensure consistent opacity */
+.opacity-100 {
+  opacity: 1 !important;
 }

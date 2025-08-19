@@ -1,33 +1,18 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { useState, useEffect, useRef } from 'react'
-
 import { useRouter } from 'next/router'
-// import { useState, useEffect } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
 import { Source_Sans_3, Source_Serif_4 } from "next/font/google"
 import { ChatSection } from '@/components/chat'
 import { validateAccessCode } from '@/lib/access-control'
-
-// import { useRef } from 'react'
-
-// const sourceSans = Source_Sans_3({
-//   variable: "--font-source-sans",
-//   subsets: ["latin"],
-// })
+import TableOfContents from '@/components/TableOfContents'
 
 const sourceSans = Source_Sans_3({
   variable: "--font-source-sans",
   subsets: ["latin"],
-  weight: ["400", "600", "700", "800"],   // 👈 關鍵：不要用可變字重
+  weight: ["400", "600", "700", "800"],
   display: "swap",
 })
-
-// const sourceSerif = Source_Serif_4({
-//   variable: "--font-source-serif",
-//   subsets: ["latin"],
-// })
 
 const sourceSerif = Source_Serif_4({
   variable: "--font-source-serif",
@@ -36,11 +21,22 @@ const sourceSerif = Source_Serif_4({
   display: "swap",
 })
 
-// --- PDF.js viewer 全域物件型別宣告 ---
+// PDF.js viewer type declarations
 type PDFViewerApp = {
   page: number;
+  pagesCount?: number;
+  pdfDocument?: {
+    numPages?: number;
+  };
   initializedPromise?: Promise<void>;
-  eventBus?: { dispatch: (type: string, detail?: any) => void };
+  eventBus?: { 
+    dispatch: (type: string, detail?: object) => void;
+    on?: (event: string, callback: () => void) => void;
+    off?: (event: string, callback: () => void) => void;
+  };
+  pdfViewer?: {
+    currentScaleValue: string | number;
+  };
 };
 
 declare global {
@@ -53,27 +49,32 @@ declare global {
 export default function SessionPage() {
   const router = useRouter()
   const { accessCode } = router.query
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [sessionData, setSessionData] = useState<any>(null)
+  const [sessionData, setSessionData] = useState<{
+    valid: boolean;
+    documentId?: string;
+    document?: { 
+      title: string; 
+      description: string;
+      fileName: string; 
+    };
+    deliberationTitle?: string;
+    error?: string;
+  } | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
   const [showPdf, setShowPdf] = useState(true)
-
+  const [showTOC, setShowTOC] = useState(true)
+  const [chatInteractions, setChatInteractions] = useState<string[]>([])
 
   const iframeRef = useRef<HTMLIFrameElement>(null)
 
   const PDF_SRC_BASE = "/documents/EN-2024-FINAL-GenAI-Community-Forum-Info-Pack.pdf"
 
-  // const jumpToPage = (page: number) => {
-  //   // 打開右側 PDF
-  //   setShowPdf(true)
-  //   // 變更 iframe 的 src hash，瀏覽器原生 PDF 檢視器支援 #page=
-  //   const url = `${PDF_SRC_BASE}#page=${page}`
-  //   if (iframeRef.current) {
-  //     // 若同一份文件多次跳頁，直接改 src 也會生效（hash change 觸發）
-  //     iframeRef.current.src = url
-  //   }
-  // }
+  // Handle TOC section clicks
+  const handleTOCSectionClick = (sectionId: string, page: number) => {
+    jumpToPage(page);
+    setChatInteractions(prev => [...new Set([...prev, sectionId])]);
+  };
 
   const jumpToPage = (page: number, snippet?: string) => {
     setShowPdf(true);
@@ -84,7 +85,7 @@ export default function SessionPage() {
     const base = `/pdfjs/web/viewer.html?file=${encodeURIComponent(PDF_SRC_BASE)}`;
     const win = iframe.contentWindow as Window | null;
 
-    // 把要搜尋的文字先存起來（就緒後再做）
+    // Store search text for later use when PDF is ready
     if (snippet && snippet.trim()) {
       pendingQueryRef.current = snippet;
     }
@@ -92,17 +93,16 @@ export default function SessionPage() {
     const app = win?.PDFViewerApplication;
 
     if (pdfjsReadyRef.current && app) {
-      // ✅ viewer 已就緒：直接跳頁並高亮
+      // PDF viewer is ready: jump to page and highlight
       app.page = p;
       if (pendingQueryRef.current) {
         highlightOnce(win!, pendingQueryRef.current);
         pendingQueryRef.current = null;
       }
     } else {
-      // ⏳ viewer 未就緒：記住頁碼，並強制 reload（禁 history）
+      // PDF viewer not ready: remember page and force reload
       pendingPageRef.current = p;
-      iframe.src = `${base}&v=${Date.now()}#disableHistory=true&page=${p}`;
-
+      iframe.src = `${base}&v=${Date.now()}#disableHistory=true&page=${p}&zoom=auto`;
     }
 
   };
@@ -128,25 +128,47 @@ export default function SessionPage() {
         setIsLoading(true);
         setError('');
 
-        // 1) 呼叫你的驗證 API（請確認會回傳 { document, deliberationTitle, ... }）
+        // 1) Call validation API
         const data = await validateAccessCode(code);
         if (!data) throw new Error('Invalid access code');
 
-        // 2) 寫進狀態，供下方 UI 使用
+        // 2) Update state
         if (!cancelled) setSessionData(data);
       } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : 'Access validation failed.';
         if (!cancelled) setError(msg);
       } finally {
-        if (!cancelled) setIsLoading(false);              // ★ 關鍵：關掉 loading
+        if (!cancelled) setIsLoading(false);
       }
     })();
 
     return () => { cancelled = true; };
   }, [router.isReady, accessCode]);
 
+  // Handle PDF zoom when layout changes
+  useEffect(() => {
+    const iframe = iframeRef.current;
+    if (!iframe || !showPdf) return;
 
-  // --- 小工具：發出一次高亮並在 3 秒後清除 ---
+    const handleZoom = () => {
+      try {
+        const win = iframe.contentWindow;
+        if (win && win.PDFViewerApplication) {
+          const app = win.PDFViewerApplication;
+          if (app.pdfViewer) {
+            app.pdfViewer.currentScaleValue = 'auto';
+          }
+        }
+      } catch (error) {
+        console.debug('PDF zoom adjustment blocked (expected for cross-origin)');
+      }
+    };
+
+    const timeoutId = setTimeout(handleZoom, 1000);
+    return () => clearTimeout(timeoutId);
+  }, [showPdf, showTOC]);
+
+  // Highlight text in PDF and clear after 3 seconds
   function highlightOnce(win: Window, raw: string) {
     if (clearTimerRef.current) {
       clearTimeout(clearTimerRef.current);
@@ -222,69 +244,91 @@ export default function SessionPage() {
     )
   }
 
-  const { document, deliberationTitle } = sessionData
+  const { document, deliberationTitle } = sessionData || {}
 
   return (
     <>
       <Head>
-        <title>{document.title} - Your Deliberation Guide</title>
-        <meta name="description" content={`${deliberationTitle}: ${document.description}`} />
+        <title>{document?.title || 'Loading'} - Your Deliberation Guide</title>
+        <meta name="description" content={`${deliberationTitle || 'Deliberation'}: ${document?.description || 'Loading document...'}`} />
       </Head>
 
       <div className={`${sourceSans.variable} ${sourceSerif.variable} h-screen bg-gray-50 flex flex-col font-sans overflow-hidden`}>
         <div className="flex-1 flex min-h-0">
-          <div className="max-w-7xl mx-auto p-3 md:p-6 flex-1 flex flex-col md:flex-row gap-3 md:gap-6 min-h-0">
-            {/* Left Side - Chat */}
-            <div className={`w-full ${showPdf ? 'md:w-1/2' : 'md:w-full'} min-h-0 overflow-hidden transition-all duration-300`}>
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 border-l-4 border-l-[#a70532] p-4 md:p-6 flex flex-col h-full">
-                <div className="flex items-center justify-between mb-4 flex-shrink-0">
-                  <h2 className="text-lg md:text-xl font-bold tracking-tight text-gray-900 !opacity-100">
-                    Your Deliberation Guide
-                  </h2>
-                  <div className="flex items-center h-[30px]">
-                    {!showPdf && (
-                      <button
-                        onClick={() => setShowPdf(true)}
-                        className="hidden md:inline-flex items-center px-3 py-1.5 text-xs bg-gray-100 text-gray-700 rounded-full hover:bg-red-100 hover:text-red-700 transition-colors border border-gray-200 hover:border-red-300"
-                      >
-                        Open Document
-                      </button>
-                    )}
+          {/* Main Content Area */}
+          <div className="flex-1 min-h-0 flex flex-row">
+            <div className="w-full mx-auto p-3 lg:p-6 flex-1 flex flex-row gap-3 lg:gap-6 min-h-0">
+              {/* Left Side - Chat */}
+              <div className={`${showPdf ? (showTOC ? 'w-[30%]' : 'w-1/2') : 'w-full'} min-h-0 overflow-hidden transition-all duration-300`}>
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 border-l-4 border-l-[#a70532] p-4 lg:p-6 flex flex-col h-full">
+                  <div className="flex items-center justify-between mb-4 flex-shrink-0">
+                    <h2 className="text-xl font-bold tracking-tight text-gray-900 !opacity-100">
+                      Your Deliberation Guide
+                    </h2>
+                    <div className="flex items-center space-x-2 h-[30px]">
+                      {!showPdf && (
+                        <button
+                          onClick={() => setShowPdf(true)}
+                          className="inline-flex items-center px-3 py-1.5 text-xs bg-gray-100 text-gray-600 rounded-full hover:bg-red-100 hover:text-red-700 transition-colors border border-gray-200 hover:border-red-300"
+                        >
+                          Open Document
+                        </button>
+                      )}
+                    </div>
                   </div>
-                </div>
-                <div className="flex-1 min-h-0 overflow-hidden">
-                  <div className="h-full">
-                    <ChatSection onJumpToPage={jumpToPage} />
+
+                  <div className="flex-1 min-h-0 overflow-hidden">
+                    <div className="h-full">
+                      <ChatSection onJumpToPage={jumpToPage} />
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Right Side - PDF Viewer - Hidden on mobile */}
-            <div className={`hidden md:block ${showPdf ? 'md:w-1/2' : 'md:w-0'} min-h-0 overflow-hidden transition-all duration-300`}>
-              <div className={`${showPdf ? 'opacity-100' : 'opacity-0 pointer-events-none'} bg-white rounded-lg shadow-sm border border-gray-200 border-l-4 border-l-[#a70532] p-6 flex flex-col h-full transition-opacity duration-300`}>
-                <div className="flex items-center justify-between mb-4 flex-shrink-0">
-                  <h2 className="text-xl font-bold tracking-tight text-gray-900 !opacity-100">
-                    Your Briefing Material
-                  </h2>
-                  <div className="flex items-center h-[30px]">
-                    <button
-                      onClick={() => setShowPdf(false)}
-                      className="inline-flex items-center px-3 py-1.5 text-xs bg-gray-100 text-gray-700 rounded-full hover:bg-red-100 hover:text-red-700 transition-colors border border-gray-200 hover:border-red-300"
-                    >
-                      Close
-                    </button>
+              {/* Right Side - PDF Viewer with embedded TOC */}
+              <div className={`${showPdf ? (showTOC ? 'w-[70%]' : 'w-1/2') : 'w-0'} min-h-0 overflow-hidden transition-all duration-300`}>
+                <div className={`${showPdf ? 'opacity-100' : 'opacity-0 pointer-events-none'} bg-white rounded-lg shadow-sm border border-gray-200 border-l-4 border-l-[#a70532] p-6 flex flex-col h-full transition-opacity duration-300`}>
+                  <div className="flex items-center justify-between mb-4 flex-shrink-0">
+                    <h2 className="text-xl font-bold tracking-tight text-gray-900 !opacity-100">
+                      Your Briefing Material
+                    </h2>
+                    <div className="flex items-center space-x-2 h-[30px]">
+                      <button
+                        onClick={() => setShowTOC(!showTOC)}
+                        className="inline-flex items-center px-3 py-1.5 text-xs bg-gray-100 text-gray-600 rounded-full hover:bg-red-100 hover:text-red-700 transition-colors border border-gray-200 hover:border-red-300"
+                      >
+                        {showTOC ? 'Hide Contents' : 'Show Contents'}
+                      </button>
+                      <button
+                        onClick={() => setShowPdf(false)}
+                        className="inline-flex items-center px-3 py-1.5 text-xs bg-gray-100 text-gray-600 rounded-full hover:bg-red-100 hover:text-red-700 transition-colors border border-gray-200 hover:border-red-300"
+                      >
+                        Close Document
+                      </button>
+                    </div>
                   </div>
-                </div>
-                <div className="flex-1 min-h-0 overflow-hidden">
-                  <iframe
-                    ref={iframeRef}
-                    src={`/pdfjs/web/viewer.html?file=${encodeURIComponent(PDF_SRC_BASE)}#page=1`}
-                    // src={`${PDF_SRC_BASE}#page=1`}
-                    // src="/documents/EN-2024-FINAL-GenAI-Community-Forum-Info-Pack.pdf"
-                    className="w-full h-full border-0 rounded-md"
-                    title="Briefing Materials"
-                  />
+
+                  <div className="flex-1 min-h-0 overflow-hidden flex">
+                    {/* Table of Contents - Embedded */}
+                    {showTOC && (
+                      <div className="w-[28.57%] flex-shrink-0 border-r border-gray-200 mr-4">
+                        <TableOfContents
+                          onSectionClick={handleTOCSectionClick}
+                          chatInteractions={chatInteractions}
+                        />
+                      </div>
+                    )}
+                    
+                    {/* PDF Viewer */}
+                    <div className="flex-1 min-h-0 overflow-hidden">
+                      <iframe
+                        ref={iframeRef}
+                        src={`/pdfjs/web/viewer.html?file=${encodeURIComponent(PDF_SRC_BASE)}#page=1&zoom=auto`}
+                        className="w-full h-full border-0 rounded-md"
+                        title="Briefing Materials"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
