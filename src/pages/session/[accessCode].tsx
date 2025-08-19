@@ -256,10 +256,10 @@ export default function SessionPage() {
       <div className={`${sourceSans.variable} ${sourceSerif.variable} h-screen bg-gray-50 flex flex-col font-sans overflow-hidden`}>
         <div className="flex-1 flex min-h-0">
           {/* Main Content Area */}
-          <div className="flex-1 min-h-0 flex flex-row">
-            <div className="w-full mx-auto p-3 lg:p-6 flex-1 flex flex-row gap-3 lg:gap-6 min-h-0">
+          <div className="flex-1 min-h-0 flex flex-col lg:flex-row">
+            <div className="w-full mx-auto p-3 lg:p-6 flex-1 flex flex-col lg:flex-row gap-3 lg:gap-6 min-h-0">
               {/* Left Side - Chat */}
-              <div className={`${showPdf ? (showTOC ? 'w-[30%]' : 'w-1/2') : 'w-full'} min-h-0 overflow-hidden transition-all duration-300`}>
+              <div className={`w-full lg:${showPdf ? (showTOC ? 'w-[30%]' : 'w-1/2') : 'w-full'} min-h-0 overflow-hidden transition-all duration-300`}>
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 border-l-4 border-l-[#a70532] p-4 lg:p-6 flex flex-col h-full">
                   <div className="flex items-center justify-between mb-4 flex-shrink-0">
                     <h2 className="text-xl font-bold tracking-tight text-gray-900 !opacity-100">
@@ -269,7 +269,7 @@ export default function SessionPage() {
                       {!showPdf && (
                         <button
                           onClick={() => setShowPdf(true)}
-                          className="inline-flex items-center px-3 py-1.5 text-xs bg-gray-100 text-gray-600 rounded-full hover:bg-red-100 hover:text-red-700 transition-colors border border-gray-200 hover:border-red-300"
+                          className="hidden lg:inline-flex items-center px-3 py-1.5 text-xs bg-gray-100 text-gray-600 rounded-full hover:bg-red-100 hover:text-red-700 transition-colors border border-gray-200 hover:border-red-300"
                         >
                           Open Document
                         </button>
@@ -285,8 +285,8 @@ export default function SessionPage() {
                 </div>
               </div>
 
-              {/* Right Side - PDF Viewer with embedded TOC */}
-              <div className={`${showPdf ? (showTOC ? 'w-[70%]' : 'w-1/2') : 'w-0'} min-h-0 overflow-hidden transition-all duration-300`}>
+              {/* Right Side - PDF Viewer with embedded TOC - Hidden on mobile */}
+              <div className={`hidden lg:block ${showPdf ? (showTOC ? 'w-[70%]' : 'w-1/2') : 'w-0'} min-h-0 overflow-hidden transition-all duration-300`}>
                 <div className={`${showPdf ? 'opacity-100' : 'opacity-0 pointer-events-none'} bg-white rounded-lg shadow-sm border border-gray-200 border-l-4 border-l-[#a70532] p-6 flex flex-col h-full transition-opacity duration-300`}>
                   <div className="flex items-center justify-between mb-4 flex-shrink-0">
                     <h2 className="text-xl font-bold tracking-tight text-gray-900 !opacity-100">
