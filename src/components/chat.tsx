@@ -316,7 +316,7 @@ export function ChatSection({ onJumpToPage }: { onJumpToPage?: (page: number, qu
                                         <button
                                             key={n}
                                             onClick={() => p && onJumpToPage?.(p, c?.snippet)}
-                                            className="text-xs border border-gray-200 rounded-full px-2 py-0.5 hover:border-100 hover:text-red-700 hover:border-red-300 transition-colors text-gray-600"
+                                            className="text-xs border border-gray-200 rounded-full px-2 py-0.5 hover:text-red-700 hover:border-red-300 transition-colors text-gray-600"
                                             title={p ? `Jump to page ${p}` : 'No page info'}
                                         >
                                             [{n}] {p ? `p.${p}` : ''}
@@ -469,3 +469,4 @@ export function ChatSection({ onJumpToPage }: { onJumpToPage?: (page: number, qu
         </div>
     )
 }
+
